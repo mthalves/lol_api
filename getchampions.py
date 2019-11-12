@@ -1,12 +1,11 @@
 import pandas as pd
 import requests
-import re
 from bs4 import BeautifulSoup
 
 # 1. Requesting the OPGG Home Page
 req = requests.get('https://br.op.gg/champion/statistics')
 if req.status_code == 200:
-	print('Requisição bem sucedida!')
+	print('Successful Request!')
 	content = req.content
 	#print(content.prettify())
 
