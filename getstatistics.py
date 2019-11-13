@@ -1,9 +1,13 @@
-import pandas as pd
-import requests
-import re
 from bs4 import BeautifulSoup
+import pandas as pd
+import pickle
+import re
+import requests
+
+from ChampionStat import ChampionStat
 
 # 1. Openning the chapions list
+result = []
 with open('./data/champions-list.csv','r') as f:
 	for line in f:
 		# 2. Retriving the champion's name statistics page
@@ -29,9 +33,45 @@ with open('./data/champions-list.csv','r') as f:
 		print('| Tier:',tier)
 
 		# c. counter champion
+		counter = {}
 		table = soup.find('table', attrs={"class": "champion-stats-header-matchup__table champion-stats-header-matchup__table--strong tabItem"})
 		tbody = table.find('tbody')
-		td = tbody.find_all('td')
-		for data in td:
-			print(data)
-		exit(1)
+		td_c = tbody.find_all('td', attrs={"class": "champion-stats-header-matchup__table__champion"})
+		td_w = tbody.find_all('td', attrs={"class": "champion-stats-header-matchup__table__winrate"})
+		
+		champions = []
+		for data in td_c:
+			champions.append(re.search("/>(.+?)\s*</td>",str(data)).group(1))
+
+		winrate = []
+		for data in td_w:
+			winrate.append(re.search("<b>(.+?)</b>",str(data)).group(1))
+
+		for i in range(len(champions)):
+			counter[champions[i]] = winrate[i]
+		print('|',counter)
+
+		# d. strong against champion
+		strong = {}
+		table = soup.find('table', attrs={"class": "champion-stats-header-matchup__table champion-stats-header-matchup__table--weak tabItem"})
+		tbody = table.find('tbody')
+		td_c = tbody.find_all('td', attrs={"class": "champion-stats-header-matchup__table__champion"})
+		td_w = tbody.find_all('td', attrs={"class": "champion-stats-header-matchup__table__winrate"})
+		
+		champions = []
+		for data in td_c:
+			champions.append(re.search("/>(.+?)\s*</td>",str(data)).group(1))
+
+		winrate = []
+		for data in td_w:
+			winrate.append(re.search("<b>(.+?)</b>",str(data)).group(1))
+
+		for i in range(len(champions)):
+			strong[champions[i]] = winrate[i]
+		print('|',strong)
+
+		result.append(ChampionStat(champ_name,role,tier,counter,strong))
+		
+# 3. Saving the result
+with open('./data/champions-stats.Pickle', 'wb') as output:  # Overwrites any existing file.
+	pickle.dump(result, output, pickle.HIGHEST_PROTOCOL)
