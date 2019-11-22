@@ -25,6 +25,12 @@ model = ChampionSelectionModel(summonername,pick,role,\
 #picks = getPicks()
 #match_info = getMatchInfo()
 
+model = ChampionSelectionModel(summonername, pick, role,
+                               gamemates, champions_stats, N_CHAMPIONS)
+
+# 3. Collecting summoners info
+# model.getSummonersStats()
+
 # 4. Starting the champions graph with champions counter/strong
 # information and the summoners statistics
 model.start()
