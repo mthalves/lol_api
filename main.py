@@ -9,9 +9,10 @@ f = open('./data/champions-stats.Pickle', 'rb')
 champions_stats = pickle.load(f)
 
 # 2. Starting the approach with no bans and no selected champions
-summonername = input("Entre com o Summoner Name: ")
-MyUser = user(summonername)
-print(MyUser)
+summonername = ''
+#input("Entre com o Summoner Name: ")
+#MyUser = user(summonername)
+#print(MyUser)
 
 pick = 0
 role = 'mid'
@@ -24,12 +25,6 @@ model = ChampionSelectionModel(summonername,pick,role,\
 #bans = getBans()
 #picks = getPicks()
 #match_info = getMatchInfo()
-
-model = ChampionSelectionModel(summonername, pick, role,
-                               gamemates, champions_stats, N_CHAMPIONS)
-
-# 3. Collecting summoners info
-# model.getSummonersStats()
 
 # 4. Starting the champions graph with champions counter/strong
 # information and the summoners statistics
