@@ -36,15 +36,15 @@ model.show_graph()
 #####
 # 5. Simulating the realtime champion selection
 # a. bans
-model.predict_bans()
-model.update_bans(bans)
-model.predict_picks()
+#model.predict_bans()
+#model.update_bans(bans)
+#model.predict_picks()
 
 # b. picks
-for pick_round in range(6):
-	print('Pick round',pick_round)
-	model.update_pick()
-	model.show()
+#for pick_round in range(6):
+#	print('Pick round',pick_round)
+#	model.update_pick()
+#	model.show()
 ####
 # END OF THE EXPERIMENT
 ####
