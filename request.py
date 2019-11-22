@@ -4,7 +4,7 @@ import requests as r
 class requests:
 
     URL = "https://br1.api.riotgames.com/lol/"  # URL BASE
-    PARAMS = {'api_key': 'RGAPI-be8953ce-255b-4dd2-98d8-883c68823eb2'}
+    PARAMS = {'api_key': 'RGAPI-2d230ebe-a5e9-4e49-ba01-da132a9198c1'}
 
     def __init__(self, SummonerName):
         full_URL = self.URL + "summoner/v4/summoners/by-name/"
@@ -24,8 +24,7 @@ def main():
     SummonerName = input("Entre com o Summoner Name: ")
     user = requests(SummonerName)
 
-    print(user.masteryChampions)
-    print(user.URL)
+    print(user.summoner)
 
 
 main()

@@ -1,14 +1,18 @@
 import pickle
 from ChampionSelectionModel import ChampionSelectionModel
+from getGameMates import user
 
 N_CHAMPIONS = 10
 
 # 1. Importing the stats results
-f = open('./data/champions-stats.Pickle','rb')
+f = open('./data/champions-stats.Pickle', 'rb')
 champions_stats = pickle.load(f)
 
 # 2. Starting the approach with no bans and no selected champions
-summonername = ''
+summonername = input("Entre com o Summoner Name: ")
+MyUser = user(summonername)
+print(MyUser)
+
 pick = 0
 role = 'mid'
 gamemates = []

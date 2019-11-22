@@ -1,18 +1,33 @@
 import requests
 import pandas as pd
 
+"""
+Request from API
+params:
+URL: link to request
+PARAMS: dictonary with request header
+"""
 def __FetchAPI(URL, PARAMS = {}):
 	try:
 		return requests.get(url=URL, params=PARAMS).json()
 	except:
 		print("Bad request")
 
+"""
+Request from Match
+params:
+Id: id for match
+API_key: key to acess data information ate riotgames api
+"""
 def __FetchMatch(matchId, API_KEY):
 	URL = "https://br1.api.riotgames.com/lol/match/v4/matches/" + str(matchId)
 	PARAMS = {'api_key': API_KEY}
 
 	return __FetchAPI(URL, PARAMS)
 
+"""
+Request a chapion ID Hash from ddragon LoL api
+"""
 def __ChampionIdHash():
 	URL = "http://ddragon.leagueoflegends.com/cdn/9.23.1/data/en_US/champion.json"
 	champData = __FetchAPI(URL)
@@ -24,12 +39,27 @@ def __ChampionIdHash():
 
 	return champHash
 
+"""
+convert champion id to champion name
+params:
+id: champion id
+champHash: championHash (given by ddragon api)
+"""
+
 def ChampId2Name(id, champHash):
 	if id < 0:
 		return None
 	else:
 		return champHash[id]
 
+
+"""
+Get data from game mode, bans, picks and lanes from a given matchId
+params:
+matchId: id for match
+API_KEY: the acess Key for riot games API
+champHas: the Hash identifier for champions
+"""
 def FetchMatchData(matchId, API_KEY, champHash):
 	data = __FetchMatch(matchId, API_KEY)
 
@@ -85,6 +115,13 @@ def FetchMatchData(matchId, API_KEY, champHash):
 	except :
 		print("Wrong json format")
 
+"""
+Brute Force Crawler for match information
+params:
+initialId: id in which the search will begain
+API_KEY
+N: number of id to search from
+"""
 def MatchCrawler(initialId, API_KEY, N):
 	print("Retriving Champion ID data...")
 	champDict = __ChampionIdHash()
@@ -99,4 +136,4 @@ def MatchCrawler(initialId, API_KEY, N):
 	df = pd.DataFrame(dataList)
 	df.to_csv("data/match-list.csv", mode='a')
 
-MatchCrawler(1796367986, API_KEY = "RGAPI-40995a70-ca55-4385-9711-3b12ff276de6",N = 10000)
+MatchCrawler(1796377980, API_KEY = "RGAPI-40995a70-ca55-4385-9711-3b12ff276de6",N = 70000)
