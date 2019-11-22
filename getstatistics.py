@@ -52,7 +52,7 @@ with open('./data/champions-list.csv','r') as f:
 
 				winrate = []
 				for data in td_w:
-					winrate.append(re.search("<b>(.+?)</b>",str(data)).group(1))
+					winrate.append(re.search("<b>(.+?)%</b>",str(data)).group(1))
 
 				for i in range(len(champions)):
 					counter[champions[i]] = winrate[i]
@@ -71,7 +71,7 @@ with open('./data/champions-list.csv','r') as f:
 
 				winrate = []
 				for data in td_w:
-					winrate.append(re.search("<b>(.+?)</b>",str(data)).group(1))
+					winrate.append(re.search("<b>(.+?)%</b>",str(data)).group(1))
 
 				for i in range(len(champions)):
 					strong[champions[i]] = winrate[i]
