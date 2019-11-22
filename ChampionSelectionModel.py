@@ -33,6 +33,9 @@ class ChampionSelectionModel:
 			for strong in cs.strong:
 				self.graph.add_edge(cs.name,strong,weight= float(cs.strong[strong]))
 
+		# 3. Updating the base graph using the match info from
+		# main summoner and its mattes
+
 		return None
 
 	def update_single_ban(self,b):
