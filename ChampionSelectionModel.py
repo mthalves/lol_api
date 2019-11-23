@@ -1,3 +1,4 @@
+import getstatistics as gstat
 import matplotlib.pyplot as plt
 import networkx as nx
 
@@ -24,7 +25,7 @@ class ChampionSelectionModel:
 		# 1. Initializing the graph
 		self.graph = nx.Graph()
 		for cs in self.champions_stats:
-			self.graph.add_node(cs.name)
+			self.graph.add_node(cs.name, reward = 0)
 
 		# 2. Connecting the nodes
 		for cs in self.champions_stats:
@@ -33,8 +34,16 @@ class ChampionSelectionModel:
 			for strong in cs.strong:
 				self.graph.add_edge(cs.name,strong,weight= float(cs.strong[strong]))
 
-		# 3. Updating the base graph using the match info from
-		# main summoner and its mattes
+		# 3. Updating the base graph using the match history info
+		# from the main summoner
+		# a. retriving champion normalized win rate stats
+		stats = gstat.summoner_stat(self.summoner)
+
+		# b. updating the node weight with the win rate information
+		for champion in stats:
+			self.graph.nodes[champion]['reward'] += stats[champion]
+
+		# 4. Updating the base graph using the champion masterie
 
 		return None
 

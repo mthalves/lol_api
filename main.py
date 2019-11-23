@@ -10,9 +10,6 @@ champions_stats = pickle.load(f)
 
 # 2. Starting the approach with no bans and no selected champions
 summonername = ''
-#input("Entre com o Summoner Name: ")
-#MyUser = user(summonername)
-#print(MyUser)
 
 pick = 0
 role = 'mid'

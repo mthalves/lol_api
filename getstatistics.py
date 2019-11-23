@@ -89,6 +89,7 @@ def champions_stats():
 def summoner_stats(summonerName):
 	# 1. Retriving the summoner's statistics page
 	result = {}
+	games = {}
 	req = requests.get('https://br.op.gg//summoner/champions/userName='+summonerName)
 
 	if req.status_code == 200:
@@ -96,7 +97,6 @@ def summoner_stats(summonerName):
 		content = req.content
 
 		# 2. Getting the information
-		# a. role
 		soup = BeautifulSoup(content, 'html.parser')
 		#print(soup.prettify())
 
@@ -121,7 +121,31 @@ def summoner_stats(summonerName):
 				champion_winrate = re.search('>(.+?)%</span>',str(champion_winrate)).group(1)
 				champion_winrate = float(champion_winrate)/100
 
+				win = row.find('div', attrs={"class":"Text Left"})
+				if win is None:
+					win = 0.0
+				else:
+					win = float(re.search('>(.+?)W</div>',str(win)).group(1))
+
+				lose = row.find('div', attrs={"class":"Text Right"})
+				if lose is None:
+					lose = 0.0
+				else:
+					lose = float(re.search('>(.+?)L</div>',str(lose)).group(1))
+
+				games[champion_name] = win + lose
 				result[champion_name] = champion_winrate
-	
+
+		# 3. Normalizing
+		max_game = max([games[champion] for champion in result])
+		for champion in result:
+			result[champion] /= (max_game/games[champion])
+
 	print('Done!')
 	return(result)
+
+#####
+# TEST
+#####
+#champions_stats()
+#summoner_stats('zMoog')
