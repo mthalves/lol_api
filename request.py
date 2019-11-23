@@ -1,30 +1,35 @@
 import requests as r
 
 
-class requests:
+class request:
 
     URL = "https://br1.api.riotgames.com/lol/"  # URL BASE
-    PARAMS = {'api_key': 'RGAPI-2d230ebe-a5e9-4e49-ba01-da132a9198c1'}
+    PARAMS = {'api_key': 'RGAPI-d0662611-31e4-48e4-9d93-ca250c44922b'}
 
-    def __init__(self, SummonerName):
+    def getUser(self, SummonerName):
         full_URL = self.URL + "summoner/v4/summoners/by-name/"
-        self.summoner = r.get(url=full_URL+SummonerName,
-                              params=self.PARAMS).json()
+        response = r.get(url=full_URL+SummonerName,
+                         params=self.PARAMS).json()
+        return response
 
+    def getMatchList(self, accountId):
         full_URL = self.URL + "match/v4/matchlists/by-account/"
-        self.matchList = r.get(url=full_URL+self.summoner['accountId'],
-                               params=self.PARAMS).json()
+        response = r.get(url=full_URL+accountId,
+                         params=self.PARAMS).json()
 
+        return response
+
+    def getMastery(self, encryptedSummonerId):
+        full_URL = self.URL + "champion-mastery/v4/champion-masteries/by-summoner/"
+        response = r.get(url=full_URL+encryptedSummonerId,
+                         params=self.PARAMS).json()
+
+        return response
+
+
+'''
+        return response
         full_URL = self.URL + "champion-mastery/v4/champion-masteries/by-summoner/"
         self.masteryChampions = r.get(url=full_URL+self.summoner['id'],
                                       params=self.PARAMS).json()
-
-
-def main():
-    SummonerName = input("Entre com o Summoner Name: ")
-    user = requests(SummonerName)
-
-    print(user.summoner)
-
-
-main()
+'''
