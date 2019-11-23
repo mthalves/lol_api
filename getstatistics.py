@@ -86,10 +86,10 @@ def champions_stats():
 	with open('./data/champions-stats.Pickle', 'wb') as output:  # Overwrites any existing file.
 		pickle.dump(result, output, pickle.HIGHEST_PROTOCOL)
 
-def summoner_stat(summonerName):
+def summoner_stats(summonerName):
 	# 1. Retriving the summoner's statistics page
-	result = []
-	req = requests.get('https://br.op.gg/summoner/userName='+summonerName)
+	result = {}
+	req = requests.get('https://br.op.gg//summoner/champions/userName='+summonerName)
 
 	if req.status_code == 200:
 		print('Successful Request for '+summonerName+'!')
@@ -98,6 +98,30 @@ def summoner_stat(summonerName):
 		# 2. Getting the information
 		# a. role
 		soup = BeautifulSoup(content, 'html.parser')
-		span = soup.find('span', attrs={"": ""})
+		#print(soup.prettify())
+
+		table = soup.find('table', attrs={"class": "ChampionStatsTable sortable"})
+		
+		table_row_1 = table.find_all('tr', attrs={"class": "Row TopRanker"})
+		table_row_2 = table.find_all('tr', attrs={"class": "Row"})
+		table_row = []
+		for row in table_row_1:
+			table_row.append(row)
+		for row in table_row_2:
+			table_row.append(row)
+
+		for row in table_row:
+			champion_name = row.find('td', attrs={"class": "ChampionName Cell"})
+			if champion_name is not None:
+				champion_name = re.search('_blank">(.+?)</a>',str(champion_name)).group(1)
+			
+				champion_winrate = row.find('span', attrs={"class":"WinRatio normal"})
+				if champion_winrate is None:
+					champion_winrate = row.find('span', attrs={"class":"WinRatio red"})
+				champion_winrate = re.search('>(.+?)%</span>',str(champion_winrate)).group(1)
+				champion_winrate = float(champion_winrate)/100
+
+				result[champion_name] = champion_winrate
 	
+	print('Done!')
 	return(result)
