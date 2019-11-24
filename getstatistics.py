@@ -141,7 +141,7 @@ def summoner_stats(summonerName):
 		for champion in result:
 			result[champion] /= (max_game/games[champion])
 
-	print('Done!')
+	print('Statistics for',summonerName+': Done!')
 	return(result)
 
 #####

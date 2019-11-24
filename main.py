@@ -26,7 +26,11 @@ model = ChampionSelectionModel(summonername,pick,role,\
 # 4. Starting the champions graph with champions counter/strong
 # information and the summoners statistics
 model.start()
-model.show_graph()
+#model.show_graph()
+#model.show_nodes_degree()
+#print('Shanon Entropy:',model.get_entropy())
+#model.show_local_cluster()
+#print('Transitivity (Global Cluster):',model.get_global_cluster())
 
 #####
 # START OF THE EXPERIMENT

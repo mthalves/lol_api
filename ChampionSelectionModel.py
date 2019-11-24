@@ -1,6 +1,9 @@
 import getstatistics as gstat
+import math
 import matplotlib.pyplot as plt
 import networkx as nx
+import numpy as np
+import pandas as pd
 
 class ChampionSelectionModel:
 
@@ -37,7 +40,7 @@ class ChampionSelectionModel:
 		# 3. Updating the base graph using the match history info
 		# from the main summoner
 		# a. retriving champion normalized win rate stats
-		stats = gstat.summoner_stat(self.summoner)
+		stats = gstat.summoner_stats('zMoog')#self.summoner)
 
 		# b. updating the node weight with the win rate information
 		for champion in stats:
@@ -65,6 +68,33 @@ class ChampionSelectionModel:
 	def predict_picks(self):
 		return None
 
+	def get_entropy(self):
+		kv,P_k = self.degree_distribution(self.graph)
+		H = 0
+		for p in P_k:
+			if(p > 0):
+				H = H - p*math.log(p, 2)
+		return H
+
+	def get_local_cluster(self):
+		vcc = []
+		for i in self.graph.nodes():
+			vcc.append(nx.clustering(self.graph, i))
+
+		vcc= np.array(vcc)
+		return vcc
+
+	def show_local_cluster(self):
+		vcc = self.get_local_cluster()
+		C_l = pd.DataFrame({'Local Cluster Coefficient': vcc})
+		C_l.index = self.graph.nodes()
+		C_l.plot.hist()
+		plt.show()
+
+	def get_global_cluster(self):
+		CC = (nx.transitivity(self.graph)) 
+		return CC
+
 	def show_graph(self,custom=True):
 		# 1. Plotting the graph
 		# a. if you want to plot the standard network, use the bellow line
@@ -88,8 +118,28 @@ class ChampionSelectionModel:
 
 		return None
 
-	def show_nodes_degree(self):
-		return None
+	def degree_distribution(self,G):
+		vk = dict(G.degree())
+		vk = list(vk.values())  # we get only the degree values
+		vk = np.array(vk)
 
-	def show_nodes_entropy(self):
+		maxk = np.max(vk)
+		mink = np.min(vk)
+		kvalues= range(0,maxk+1) # possible values of k
+
+		Pk = np.zeros(maxk+1) # P(k)
+		for k in vk:
+			Pk[k] = Pk[k] + 1
+		Pk = Pk/sum(Pk) # the sum of the elements of P(k) must to be equal to one
+
+		return kvalues,Pk
+
+	def show_nodes_degree(self):
+		kv, P_k = self.degree_distribution(self.graph)
+		plt.bar(kv,P_k)
+		plt.xlabel("k", fontsize=20)
+		plt.ylabel("P(k)", fontsize=20)
+		plt.title("Degree distribution", fontsize=20)
+		#plt.grid(True)
+		plt.show(True)
 		return None
