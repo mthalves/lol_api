@@ -1,10 +1,9 @@
 import requests as r
 
-
 class request:
 
     URL = "https://br1.api.riotgames.com/lol/"  # URL BASE
-    PARAMS = {'api_key': 'RGAPI-d0662611-31e4-48e4-9d93-ca250c44922b'}
+    PARAMS = {'api_key': 'RGAPI-e288b45f-8343-4bf4-baf2-8814e3ac9624'}
 
     def getUser(self, SummonerName):
         full_URL = self.URL + "summoner/v4/summoners/by-name/"
