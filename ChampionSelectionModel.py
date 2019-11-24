@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+import time
+
+GAMEMATENAME = 0
+GAMEMATEROLE = 1
 
 class ChampionSelectionModel:
 
@@ -25,6 +29,7 @@ class ChampionSelectionModel:
 		self.graph = None
 
 	def start(self):
+		start_t = time.time()
 		# 1. Initializing the graph
 		self.graph = nx.Graph()
 		for cs in self.champions_stats:
@@ -40,14 +45,28 @@ class ChampionSelectionModel:
 		# 3. Updating the base graph using the match history info
 		# from the main summoner
 		# a. retriving champion normalized win rate stats
-		stats = gstat.summoner_stats('zMoog')#self.summoner)
+		stats = gstat.summoner_stats(self.summoner)
 
 		# b. updating the node weight with the win rate information
 		for champion in stats:
-			self.graph.nodes[champion]['reward'] += stats[champion]
+			if champion in self.graph.nodes:
+				self.graph.nodes[champion]['reward'] += stats[champion]
 
 		# 4. Updating the base graph using the champion masterie
 
+		# 5. Updating the base graph using the gamemates statistics
+		for gamemate in self.mates:
+			stats = gstat.summoner_stats(gamemate[GAMEMATENAME])
+			for champion in stats:
+				if champion in self.graph.nodes:
+					self.graph.nodes[champion]['reward'] += stats[champion]
+
+		# 6. Updating the base graph using role information
+		for champion in self.champions_stats:
+			if champion.role == self.role:
+				self.graph.nodes[champion]['reward'] += 1
+
+		print('Execution in',time.time()-start_t,'sec.')
 		return None
 
 	def update_single_ban(self,b):

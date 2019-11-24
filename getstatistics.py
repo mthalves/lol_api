@@ -93,7 +93,7 @@ def summoner_stats(summonerName):
 	req = requests.get('https://br.op.gg//summoner/champions/userName='+summonerName)
 
 	if req.status_code == 200:
-		print('Successful Request for '+summonerName+'!')
+		print('| Successful Request for '+summonerName+'!')
 		content = req.content
 
 		# 2. Getting the information
@@ -141,7 +141,7 @@ def summoner_stats(summonerName):
 		for champion in result:
 			result[champion] /= (max_game/games[champion])
 
-	print('Statistics for',summonerName+': Done!')
+	print('| Statistics for',summonerName+': Done!')
 	return(result)
 
 #####

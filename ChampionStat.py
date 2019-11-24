@@ -16,3 +16,9 @@ class ChampionStat:
 		print('|',self.counter)
 		print('|',self.strong)
 		print('-----')
+
+def getChampion(champ_name,champion_stat):
+	for champ in champion_stat:
+		if champ.name == champ_name:
+			return(champ)
+	return(None)
