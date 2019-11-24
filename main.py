@@ -75,6 +75,8 @@ with open('data/match-list.csv','r') as csv_file:
 		victory = getVictory(match_info)
 
 		# 4. Running estimation for each summoner
+		predicted_bans1 = set()
+		predicted_bans2 = set()
 		for k in range(len(summoners)):
 			# a. getting main summoner start information
 			summonername = summoners[k]
@@ -90,7 +92,6 @@ with open('data/match-list.csv','r') as csv_file:
 			model = ChampionSelectionModel(summonername,pick_order,role,\
 				gamemates,champions_stats,N_CHAMPIONS)
 			model.start()
-			exit(1)
 
 			#model.show_graph()
 			#model.show_nodes_degree()
@@ -103,11 +104,18 @@ with open('data/match-list.csv','r') as csv_file:
 			#####
 			# 5. Simulating the realtime champion selection
 			# a. bans
-			#model.predict_bans()
-			#model.update_bans(bans)
-			#model.predict_picks()
+			p_bans = model.predict_bans()
+			if k < 5:
+				for ban in p_bans:
+					predicted_bans1.add(ban)
+			else:
+				for ban in p_bans:
+					predicted_bans2.add(ban)
+
+			model.update_bans(bans)
 
 			# b. picks
+			#predicted_picks = model.predict_picks()
 			#for pick_round in range(6):
 			#	print('Pick round',pick_round)
 			#	model.update_pick()
@@ -115,7 +123,9 @@ with open('data/match-list.csv','r') as csv_file:
 			####
 			# END OF THE EXPERIMENT
 			####
+		print([ban in predicted_bans1 if ban != '' else None for ban in bans[0:5]])
+		print([ban in predicted_bans2 if ban != '' else None for ban in bans[5:10]])
+		exit(1)
+		# 6. Evaluating the results for the match
 
-			# 6. Evaluating the results for the match
-
-			# 8. Comparing the real result with the predicted result
+		# 8. Comparing the real result with the predicted result
