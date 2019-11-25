@@ -71,35 +71,42 @@ class ChampionSelectionModel:
 		# 6. Updating the base graph using role information
 		for champion in self.champions_stats:
 			if champion.role == self.role:
-				self.graph.nodes[champion]['reward'] *= 1.5
+				self.graph.nodes[champion]['reward'] += 5
 
 		print('Execution in',time.time()-start_t,'sec.')
 		return None
 
 	def mean_random_walk(self,pref_champ, counters, start_node,\
 							walk_len,max_it=20,pick=True):
+		if start_node not in self.graph.nodes:
+			return([None,0])
+
 		# 1. Initializing the variables
 		champ, reward = '', np.zeros(max_it)
 		cur_node = start_node
 		champ = cur_node
+		alt = 1 if pick else -1
 		
 		# 2. Starting the Random Walk
 		for it in range(max_it):
 			# a. initializing the reward
-			if cur_node in counters:
-				reward[it] -= self.graph.nodes[cur_node]['reward']	
-			elif cur_node in pref_champ:
-				reward[it] += self.graph.nodes[cur_node]['reward']
+			if cur_node in pref_champ:
+				reward[it] += self.graph.nodes[cur_node]['reward']	
+			elif cur_node in counters:
+				reward[it] -= self.graph.nodes[cur_node]['reward']
 			elif cur_node in self.stats:
 				reward[it] += self.stats[cur_node]*self.graph.nodes[cur_node]['reward']		
+			else:
+				reward[it] += alt*self.graph.nodes[cur_node]['reward']	
 
 			# b. walking
 			for i in range(walk_len):
 				# taking the correct edges to walk
 				if pick:
 					transitions = self.graph.edges(cur_node)
-					transitions = [{e,self.graph.get_edge_data[e]}\
-					 for e in transitions if self.graph.get_edge_data[e] > 0]
+					transitions = [e for e in transitions]
+					transitions = [[e,abs(self.graph.get_edge_data(*e)['weight'])]\
+					 for e in transitions if self.graph.get_edge_data(*e)['weight'] > 0]
 				else:
 					transitions = self.graph.edges(cur_node)
 					transitions = [e for e in transitions]
@@ -117,11 +124,11 @@ class ChampionSelectionModel:
 						cur_node = transitions[j][0][1]
 
 						if cur_node in counters:
-							reward[it] += P[j]*self.graph.nodes[cur_node]['reward']	
+							reward[it] -= alt*P[j]*self.graph.nodes[cur_node]['reward']	
 						elif cur_node in pref_champ:
-							reward[it] -= P[j]*self.graph.nodes[cur_node]['reward']	
+							reward[it] += alt*P[j]*self.graph.nodes[cur_node]['reward']	
 						elif cur_node in self.stats:
-							reward[it] -= self.stats[cur_node]*self.graph.nodes[cur_node]['reward']	
+							reward[it] += alt*self.stats[cur_node]*self.graph.nodes[cur_node]['reward']	
 						break
 
 			cur_node = champ
@@ -130,7 +137,22 @@ class ChampionSelectionModel:
 		return([champ,np.mean(reward)])
 
 	def update_single_ban(self,b):
-		self.bans.append(b)
+		if b in self.graph.nodes:
+			# i. appending the ban
+			self.bans.append(b)
+
+			# ii. replicating the effects over the graph
+			transitions = self.graph.edges(b)
+			transitions = [e for e in transitions]
+			transitions = [[e,abs(self.graph.get_edge_data(*e)['weight'])] for e in transitions]
+			for e in transitions:
+				if e[1] > 0:
+					self.graph.nodes[e[0][1]]['reward'] += 1
+				else:
+					self.graph.nodes[e[0][1]]['reward'] -= 1
+
+			# iii. removing champion from graph
+			self.graph.remove_node(b)
 		return None
 
 	def update_bans(self,bans):
@@ -172,16 +194,77 @@ class ChampionSelectionModel:
 			result.append(mrw)
 
 		# 5. Returning the result bans
-		result = sorted(result, key=operator.itemgetter(1), reverse=True)[0:self.n_champions]
+		result = sorted(result, key=operator.itemgetter(1), reverse=False)[0:self.n_champions]
 		result = [r[0] for r in result]
 		print('Execution in',time.time()-start_t,'sec.')
 		return(result)
 
-	def update_pick(self):
+	def update_pick(self,p,my_team):
+		if p in self.graph.nodes:
+			# i. appending the pick
+			self.picks.append(p)
+
+			# ii. replicating the effects over the graph
+			transitions = self.graph.edges(p)
+			transitions = [e for e in transitions]
+			transitions = [[e,abs(self.graph.get_edge_data(*e)['weight'])] for e in transitions]
+			for e in transitions:
+				if e[1] > 0:
+					self.graph.nodes[e[0][1]]['reward'] += 1 if my_team else -1
+				else:
+					self.graph.nodes[e[0][1]]['reward'] += 1
+
+			# iii. removing champion from graph
+			self.graph.remove_node(p)
 		return None
 
-	def predict_picks(self):
-		return None
+	def predict_picks(self,pick_round):
+		print('3.'+str(pick_round+1)+') Predicting Picks')
+		start_t = time.time()
+		# 1. Getting the summoner prefereble champs
+		preferable_champs = []
+		for champ in self.stats:
+			preferable_champs.append(champ[0])
+			if len(preferable_champs) == 20:
+				break;
+
+		# 2. Getting these champions counters
+		counters = {}
+		for champ_name in preferable_champs:
+			champ = getChampion(champ_name,self.champions_stats)
+			for c in champ.counter:
+				if c in counters:
+					counters[c] += 1
+				else:
+					counters[c] = 1
+
+		# 4. Running the bans Random Walk
+		result = []
+		champions_list = [champ.name for champ in self.champions_stats]
+		for champ in champions_list:
+			mrw = self.mean_random_walk(\
+				pref_champ = preferable_champs,\
+				counters = counters,\
+				start_node = champ,\
+				walk_len = int(len(champions_list)*0.10),\
+				max_it = 20,\
+				pick=True)
+			if mrw[0] is not None:
+				result.append(mrw)
+
+		# 5. Returning the result bans
+		result = sorted(result, key=operator.itemgetter(1), reverse=True)
+		result = [r[0] for r in result]
+
+		pick_result = []
+		for champ_name in result:
+			champ = getChampion(champ_name,self.champions_stats)
+			if champ.role.upper() == self.role:
+				pick_result.append(champ_name)
+				if len(pick_result) == self.n_champions:
+					break
+		print('Execution in',time.time()-start_t,'sec.')
+		return(pick_result)
 
 	def get_entropy(self):
 		kv,P_k = self.degree_distribution(self.graph)

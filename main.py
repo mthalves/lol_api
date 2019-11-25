@@ -32,7 +32,7 @@ def getRole(lane,pick):
 	if lane == 'BOTTOM':
 		champion = getChampion(pick,champions_stats)
 		if champion.role == 'Bottom':
-			return('ADC')
+			return('BOTTOM')
 		else:
 			return('SUPPORT')
 	else:
@@ -62,6 +62,8 @@ f = open('./data/champions-stats.Pickle', 'rb')
 champions_stats = pickle.load(f)
 
 # 2. Starting the approach with no bans and no selected champions
+bans_results = []
+picks_results = []
 with open('data/match-list.csv','r') as csv_file:
 	csvreader = csv.reader(csv_file) 
 	next(csvreader) # ignoring header
@@ -77,6 +79,7 @@ with open('data/match-list.csv','r') as csv_file:
 		# 4. Running estimation for each summoner
 		predicted_bans1 = set()
 		predicted_bans2 = set()
+		team1_picks, team2_picks = 0, 0
 		for k in range(len(summoners)):
 			# a. getting main summoner start information
 			summonername = summoners[k]
@@ -85,7 +88,7 @@ with open('data/match-list.csv','r') as csv_file:
 			role = getRole(lanes[k],picks[k])
 			gamemates = getGameMates(summonername,summoners,lanes,picks)
 
-			print('Estimation for summoner',k+1,':',summonername,'('+role+')')
+			print('=====\n> Estimation for summoner',k+1,':',summonername,'('+role+')')
 
 			# b. initializing and starting/updating the model with
 			# current information
@@ -103,8 +106,12 @@ with open('data/match-list.csv','r') as csv_file:
 			# START OF THE EXPERIMENT
 			#####
 			# 5. Simulating the realtime champion selection
-			# a. bans
+			# a. BANS
+			# i. predicting the bans
 			p_bans = model.predict_bans()
+			#print(p_bans)
+
+			# ii. adding the bans to the team set
 			if k < 5:
 				for ban in p_bans:
 					predicted_bans1.add(ban)
@@ -112,20 +119,84 @@ with open('data/match-list.csv','r') as csv_file:
 				for ban in p_bans:
 					predicted_bans2.add(ban)
 
-			model.update_bans(bans)
+			# iii. updating bans and removing champions 
+			# node in the graph
+			if k < 5:
+				model.update_bans(bans)
 
-			# b. picks
-			#predicted_picks = model.predict_picks()
-			#for pick_round in range(6):
-			#	print('Pick round',pick_round)
-			#	model.update_pick()
-			#	model.show()
+			# b. PICKS
+			# i. predicting the first picks
+			predicted_picks = model.predict_picks(0)
+			#print(predicted_picks)
+
+			# ii. simulating the picks phase
+			team1_counter, team2_counter = 0, 0
+			for pick_round in range(6):
+				# picking
+				if pick_round == 0:
+					model.update_pick(picks[team1_counter],k < 5)
+					team1_counter += 1
+				elif pick_round == 5:
+					model.update_pick(picks[5+team2_counter],k >= 5)
+					team2_counter += 1
+				else:
+					if team1_counter < team2_counter:
+						model.update_pick(picks[team1_counter],k < 5)
+						model.update_pick(picks[team1_counter+1],k < 5)
+						team1_counter += 2
+					else:
+						model.update_pick(picks[5+team2_counter],k >= 5)
+						model.update_pick(picks[5+team2_counter+1],k >= 5)
+						team2_counter += 2
+
+				# checking stop condition (already pick)
+				print('|Team 1 Picks =',team1_counter,\
+					'x',team2_counter,'= Team 2 Picks')
+				if k < 5:
+					if (k % 5) < team1_counter:
+						if pick in predicted_picks:
+							team1_picks += 1
+						break
+				else:
+					if (k % 5) < team2_counter:
+						if pick in predicted_picks:
+							team2_picks += 1 
+						break
+
+				# updating the model
+				predicted_picks = model.predict_picks(pick_round+1)
+				#print(predicted_picks)
 			####
 			# END OF THE EXPERIMENT
 			####
-		print([ban in predicted_bans1 if ban != '' else None for ban in bans[0:5]])
-		print([ban in predicted_bans2 if ban != '' else None for ban in bans[5:10]])
-		exit(1)
-		# 6. Evaluating the results for the match
 
-		# 8. Comparing the real result with the predicted result
+		# 6. Evaluating the results for the match
+		# a. BANS
+		team1_bans, counter1 = 0, 0
+		for ban in bans[0:5]:
+			if ban != '':
+				counter1 += 1
+				if (ban in predicted_bans1 and victory)\
+				or (ban not in predicted_bans1 and not victory):
+					team1_bans += 1
+
+		team2_bans, counter2 = 0, 0
+		for ban in bans[5:10]:
+			if ban != '':
+				counter2 += 1
+				if (ban in predicted_bans2 and victory)\
+				or (ban not in predicted_bans2 and not victory):
+					team2_bans += 1
+
+		print('| BANS RESULT:')
+		print('| Good bans (Team 1):',team1_bans/counter1 ,'- Win?',victory)
+		print('| Good bans (Team 2):',team2_bans/counter2 ,'- Win?',not victory)
+		bans_results.append([team1_bans/counter1,team2_bans/counter2,victory])
+
+		# b. PICKS
+		print('| PICKS RESULT:')
+		print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
+		print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
+		picks_results.append([team1_picks/5,team2_picks/5,victory])
+
+# 3. Saving the result
