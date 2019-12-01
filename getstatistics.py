@@ -139,6 +139,8 @@ def summoner_stats(summonerName):
 				result[champion_name] = champion_winrate
 
 		# 3. Normalizing
+		if len(games) == 0 or len(result) == 0:
+			return None
 		max_game = max([games[champion] for champion in result])
 		for champion in result:
 			result[champion] /= (max_game/games[champion])
