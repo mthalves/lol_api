@@ -1,6 +1,10 @@
 import requests
 import pandas as pd
 import numpy.random as rd
+import pickle
+from ChampionStat import getChampion
+
+import numpy as np
 
 """
 Request from API
@@ -199,4 +203,64 @@ def MatchCrawler(initialId, API_KEY, N, M):
 		df.to_csv("data/match-list.csv", mode='a', header=False)
 		dataList = []
 
+def championName(champ_name):
+	switcher={
+	        "Nunu": "Nunu &amp; Willump",
+	        "MissFortune" : "Miss Fortune",
+	        "XinZhao" : "Xin Zhao",
+	        "Velkoz" : "Vel'Koz",
+	        "LeeSin" : "Lee Sin",
+	        'AurelionSol': 'Aurelion Sol',
+	        'Chogath' : 'Cho\'Gath',
+	        'DrMundo' : 'Dr. Mundo',
+	        'JarvanIV' : 'Jarvan IV',
+	        'Kaisa' : 'Kai\'Sa',
+	        'Khazix' : 'Kha\'Zix',
+	        'KogMaw' : 'Kog\'Maw',
+	        'Leblanc' : 'LeBlanc',
+	        'MasterYi' : 'Master Yi',
+	        'RekSai' : 'Rek\'Sai',
+	        'TahmKench' : 'Tahm Kench',
+	        'TwistedFate' : 'Twisted Fate'
+	     }
+	return switcher.get(champ_name, champ_name)
+
+
+def DataCleaning(path):
+	dataset = pd.read_csv(path)
+	dataset.drop_duplicates(subset = "matchId", inplace = True)
+	
+	f = open('./data/champions-stats.Pickle', 'rb')
+	champions_stats = pickle.load(f)
+
+	toDrop = []
+
+
+	for row_index,row in dataset.iterrows():
+		
+		for i in range(1,11):
+			champ_name = championName(row["champ" + str(i)])
+			if(champ_name == None):
+				toDrop.append(row_index)
+				break;
+			try:
+				role = getChampion(champ_name, champions_stats).role
+				if role == "Bottom" or role == "Support":
+					if row["lane" + str(i)] != "BOTTOM":
+						toDrop.append(row_index)
+						break;
+				elif role.lower() != row["lane" + str(i)].lower():
+					toDrop.append(row_index)
+					break;
+			except :
+				print("%s has not enough games for statistics", champ_name)
+				toDrop.append(row_index)
+				break;
+
+	dataset.drop(toDrop, inplace = True)
+	dataset.drop(labels = 'Unnamed: 0', axis = 1, inplace = True)
+	dataset.to_csv("data/match-list-clean.csv")
+
+
 #MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
+DataCleaning("./data/match-list.csv")

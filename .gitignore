@@ -4,4 +4,3 @@ __pycache__/
 */*.pyc
 lol_env/*
 lol_env/
-*.csv
