@@ -8,6 +8,7 @@ from ChampionStat import *
 from getGameMates import user
 
 N_CHAMPIONS = 5
+SKIP_4TEST = 0
 
 def getBans(match_info):
 	bans = [match_info[i] for i in range(3,13)]
@@ -70,11 +71,14 @@ result_file.write('GoodBans1'+';'+'GoodBans2'\
 result_file.close()
 
 counter = 0
-number_of_matches = len(open('data/match-list.csv','r').readlines())
-with open('data/match-list.csv','r') as csv_file:
+number_of_matches = len(open('data/match-list-clean.csv','r').readlines())
+with open('data/match-list-clean.csv','r') as csv_file:
 	counter += 1
 	csvreader = csv.reader(csv_file) 
 	next(csvreader) # ignoring header
+	# skiping for test
+	for i in range(SKIP_4TEST):
+		next(csvreader) # ignoring match
 
 	print('Running Match '+str(counter)+'/'+str(number_of_matches))
 	for match_info in csvreader:
