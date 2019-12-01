@@ -34,7 +34,7 @@ def __FetchMatchList(accountId, API_KEY):
 """
 Request a chapion ID Hash from ddragon LoL api
 """
-def __ChampionIdHash():
+def ChampionIdHash():
 	URL = "http://ddragon.leagueoflegends.com/cdn/9.23.1/data/en_US/champion.json"
 	champData = __FetchAPI(URL)
 	champData = champData["data"]
@@ -164,7 +164,7 @@ N: number of id to search from
 """
 def MatchCrawler(initialId, API_KEY, N, M):
 	print("Retriving Champion ID data...")
-	champDict = __ChampionIdHash()
+	champDict = ChampionIdHash()
 	dataList = []
 	print("Retriving matches data:")
 	
@@ -199,4 +199,4 @@ def MatchCrawler(initialId, API_KEY, N, M):
 		df.to_csv("data/match-list.csv", mode='a', header=False)
 		dataList = []
 
-MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
+#MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
