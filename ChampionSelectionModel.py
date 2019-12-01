@@ -304,7 +304,7 @@ class ChampionSelectionModel:
 		return CC
 
 	def plot_graph(self,savename,custom=True):
-		fig = plt.figure(1, figsize=(6, 3.4))
+		fig = plt.figure(1)
 		# 1. Plotting the graph
 		# a. if you want to plot the standard network, use the bellow line
 		if not custom:
@@ -356,7 +356,7 @@ class ChampionSelectionModel:
 		return kvalues,Pk
 
 	def plot_nodes_degree(self,savename):
-		fig = plt.figure(1, figsize=(6, 3.4))
+		fig = plt.figure(1)
 		kv, P_k = self.degree_distribution(self.graph)
 		plt.bar(kv,P_k, width=0.80, color='b')
 		plt.xlabel("Degree (k)", fontsize=20)
@@ -368,7 +368,7 @@ class ChampionSelectionModel:
 		return None
 
 	def plot_nodes_visits(self, savename):
-		fig = plt.figure(1, figsize=(6, 3.4))
+		fig = plt.figure(1)
 		visits = [[champ,self.graph.nodes[champ]['visits']] for champ in self.graph.nodes]
 		sum_visits = sum([node[1] for node in visits])
 

@@ -64,13 +64,23 @@ f = open('./data/champions-stats.Pickle', 'rb')
 champions_stats = pickle.load(f)
 
 # 2. Starting the approach with no bans and no selected champions
-bans_results = []
-picks_results = []
+result_file = open('results.csv','w+')
+result_file.write('GoodBans1'+';'+'GoodBans2'\
+					+';'+'GoodPicks1'+';'+'GoodPicks2'+';'+'Victory\n')
+result_file.close()
+
+counter = 0
+number_of_matches = len(open('data/match-list.csv','r').readlines())
 with open('data/match-list.csv','r') as csv_file:
+	counter += 1
 	csvreader = csv.reader(csv_file) 
 	next(csvreader) # ignoring header
 
+	print('Running Match '+str(counter)+'/'+str(number_of_matches))
 	for match_info in csvreader:
+		bans_results = []
+		picks_results = []
+
 		# 3. Getting match general information
 		summoners = getSummoners(match_info)
 		bans = getBans(match_info)
@@ -83,6 +93,7 @@ with open('data/match-list.csv','r') as csv_file:
 		predicted_bans2 = set()
 		team1_picks, team2_picks = 0, 0
 		for k in range(len(summoners)):
+			entropy = []
 			# a. getting main summoner start information
 			summonername = summoners[k]
 			pick = picks[k]
@@ -97,6 +108,7 @@ with open('data/match-list.csv','r') as csv_file:
 			model = ChampionSelectionModel(summonername,pick_order,role,\
 				gamemates,champions_stats,N_CHAMPIONS)
 			model.start()
+			entropy.append(model.get_entropy())
 
 			#model.plot_graph('network.pdf')
 			#model.plot_nodes_degree('degree.pdf')
@@ -111,6 +123,7 @@ with open('data/match-list.csv','r') as csv_file:
 			# a. BANS
 			# i. predicting the bans
 			p_bans = model.predict_bans()
+			entropy.append(model.get_entropy())
 			#print(p_bans)
 
 			# ii. adding the bans to the team set
@@ -130,13 +143,11 @@ with open('data/match-list.csv','r') as csv_file:
 			# i. predicting the first picks
 			predicted_picks = model.predict_picks(0)
 			#print(predicted_picks)
-			model.plot_nodes_visits('Visit_1.pdf')
+			#model.plot_nodes_visits('Visit_1.pdf')
 
 			# ii. simulating the picks phase
-			entropy = []
 			team1_counter, team2_counter = 0, 0
 			for pick_round in range(6):
-				entropy.append(model.get_entropy())
 				# picking
 				if pick_round == 0:
 					model.update_pick(picks[team1_counter],k < 5)
@@ -155,8 +166,8 @@ with open('data/match-list.csv','r') as csv_file:
 						team2_counter += 2
 
 				# checking stop condition (already pick)
-				print('|Team 1 Picks =',team1_counter,\
-					'x',team2_counter,'= Team 2 Picks')
+				#print('|Team 1 Picks =',team1_counter,\
+				#	'x',team2_counter,'= Team 2 Picks')
 				if k < 5:
 					if (k % 5) < team1_counter:
 						if pick in predicted_picks:
@@ -170,10 +181,14 @@ with open('data/match-list.csv','r') as csv_file:
 
 				# updating the model
 				predicted_picks = model.predict_picks(pick_round+1)
+				entropy.append(model.get_entropy())
 				#print(predicted_picks)
-				model.plot_nodes_visits('Visit_'+str(pick_round+2)+'.pdf')
-			plt.plot(entropy, '-', linewidth=2, markersize=12)
-			plt.show()
+				#model.plot_nodes_visits('Visit_'+str(pick_round+2)+'.pdf')
+
+			# iii. plotting model entropy
+			#plt.plot(entropy, '-', linewidth=2, markersize=12)
+			#plt.ylabel('Entropy', fontsize=20)
+			#plt.show()
 			####
 			# END OF THE EXPERIMENT
 			####
@@ -196,15 +211,19 @@ with open('data/match-list.csv','r') as csv_file:
 				or (ban not in predicted_bans2 and not victory):
 					team2_bans += 1
 
-		print('| BANS RESULT:')
-		print('| Good bans (Team 1):',team1_bans/counter1 ,'- Win?',victory)
-		print('| Good bans (Team 2):',team2_bans/counter2 ,'- Win?',not victory)
-		bans_results.append([team1_bans/counter1,team2_bans/counter2,victory])
+		#print('| BANS RESULT:')
+		#print('| Good bans (Team 1):',team1_bans/counter1 ,'- Win?',victory)
+		#print('| Good bans (Team 2):',team2_bans/counter2 ,'- Win?',not victory)
+		bans_results = [team1_bans/counter1,team2_bans/counter2,victory]
 
 		# b. PICKS
-		print('| PICKS RESULT:')
-		print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
-		print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
-		picks_results.append([team1_picks/5,team2_picks/5,victory])
-		exit(1)
-# 3. Saving the result
+		#print('| PICKS RESULT:')
+		#print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
+		#print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
+		picks_results = [team1_picks/5,team2_picks/5,victory]
+
+		# 7. Saving the result
+		result_file = open('results.csv','a')
+		result_file.write(str(bans_results[0])+';'+str(bans_results[1])\
+							+';'+str(picks_results[0])+';'+str(picks_results[1])+';'+str(victory)+'\n')
+		result_file.close()
