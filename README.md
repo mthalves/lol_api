@@ -2,7 +2,7 @@
 # Personal Context-Aware Recommendation (PCAR) Model
 
 ![leaguefront](./imgs/league_of_legends.png)
-![network](./imgs/network.pdf)
+![network](./imgs/network.png)
 
 This repository refers to the final project of USP Introduction to Data Science module (code: SCC0275).
 
