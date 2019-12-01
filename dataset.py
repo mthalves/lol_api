@@ -263,4 +263,4 @@ def DataCleaning(path):
 
 
 #MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
-DataCleaning("./data/match-list.csv")
+#DataCleaning("./data/match-list.csv")

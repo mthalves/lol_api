@@ -101,6 +101,8 @@ def summoner_stats(summonerName):
 		#print(soup.prettify())
 
 		table = soup.find('table', attrs={"class": "ChampionStatsTable sortable"})
+		if table is None:
+			return None
 		
 		table_row_1 = table.find_all('tr', attrs={"class": "Row TopRanker"})
 		table_row_2 = table.find_all('tr', attrs={"class": "Row"})

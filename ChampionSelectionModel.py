@@ -54,6 +54,9 @@ class ChampionSelectionModel:
 		# from the main summoner
 		# a. retriving champion normalized win rate stats
 		self.stats = gstat.summoner_stats(self.summoner)
+		if self.stats is None:
+			return False
+			
 		self.stats = sorted(self.stats.items(), key=operator.itemgetter(1),reverse=True)
 
 		# b. updating the node weight with the win rate information
@@ -72,6 +75,9 @@ class ChampionSelectionModel:
 		# 5. Updating the base graph using the gamemates statistics
 		for gamemate in self.mates:
 			stats = gstat.summoner_stats(gamemate[GAMEMATENAME])
+			if stats is None:
+				return False
+
 			for champion in stats:
 				if champion in self.graph.nodes:
 					self.graph.nodes[champion]['reward'] += stats[champion]
@@ -82,7 +88,7 @@ class ChampionSelectionModel:
 				self.graph.nodes[champion]['reward'] += 5
 
 		print('Execution in',time.time()-start_t,'sec.')
-		return None
+		return True
 
 	def mean_random_walk(self,pref_champ, counters, start_node,\
 							walk_len,max_it=20,pick=True):

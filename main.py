@@ -8,7 +8,7 @@ from ChampionStat import *
 from getGameMates import user
 
 N_CHAMPIONS = 5
-SKIP_4TEST = 0
+SKIP_4TEST = 1
 
 def getBans(match_info):
 	bans = [match_info[i] for i in range(3,13)]
@@ -31,9 +31,9 @@ def getVictory(match_info):
 
 def getRole(lane,pick):
 	global champions_stats
-
 	if lane == 'BOTTOM':
 		champion = getChampion(pick,champions_stats)
+
 		if champion.role == 'Bottom':
 			return('BOTTOM')
 		else:
@@ -79,6 +79,7 @@ with open('data/match-list-clean.csv','r') as csv_file:
 	# skiping for test
 	for i in range(SKIP_4TEST):
 		next(csvreader) # ignoring match
+		counter += 1
 
 	print('Running Match '+str(counter)+'/'+str(number_of_matches))
 	for match_info in csvreader:
@@ -111,7 +112,9 @@ with open('data/match-list-clean.csv','r') as csv_file:
 			# current information
 			model = ChampionSelectionModel(summonername,pick_order,role,\
 				gamemates,champions_stats,N_CHAMPIONS)
-			model.start()
+			create_flag = model.start()
+			if not create_flag:
+				break
 			entropy.append(model.get_entropy())
 
 			#model.plot_graph('network.pdf')
@@ -197,37 +200,38 @@ with open('data/match-list-clean.csv','r') as csv_file:
 			# END OF THE EXPERIMENT
 			####
 
-		# 6. Evaluating the results for the match
-		# a. BANS
-		team1_bans, counter1 = 0, 0
-		for ban in bans[0:5]:
-			if ban != '':
-				counter1 += 1
-				if (ban in predicted_bans1 and victory)\
-				or (ban not in predicted_bans1 and not victory):
-					team1_bans += 1
+		if model is not None:
+			# 6. Evaluating the results for the match
+			# a. BANS
+			team1_bans, counter1 = 0, 0
+			for ban in bans[0:5]:
+				if ban != '':
+					counter1 += 1
+					if (ban in predicted_bans1 and victory)\
+					or (ban not in predicted_bans1 and not victory):
+						team1_bans += 1
 
-		team2_bans, counter2 = 0, 0
-		for ban in bans[5:10]:
-			if ban != '':
-				counter2 += 1
-				if (ban in predicted_bans2 and victory)\
-				or (ban not in predicted_bans2 and not victory):
-					team2_bans += 1
+			team2_bans, counter2 = 0, 0
+			for ban in bans[5:10]:
+				if ban != '':
+					counter2 += 1
+					if (ban in predicted_bans2 and victory)\
+					or (ban not in predicted_bans2 and not victory):
+						team2_bans += 1
 
-		#print('| BANS RESULT:')
-		#print('| Good bans (Team 1):',team1_bans/counter1 ,'- Win?',victory)
-		#print('| Good bans (Team 2):',team2_bans/counter2 ,'- Win?',not victory)
-		bans_results = [team1_bans/counter1,team2_bans/counter2,victory]
+			#print('| BANS RESULT:')
+			#print('| Good bans (Team 1):',team1_bans/counter1 ,'- Win?',victory)
+			#print('| Good bans (Team 2):',team2_bans/counter2 ,'- Win?',not victory)
+			bans_results = [team1_bans/counter1,team2_bans/counter2,victory]
 
-		# b. PICKS
-		#print('| PICKS RESULT:')
-		#print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
-		#print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
-		picks_results = [team1_picks/5,team2_picks/5,victory]
+			# b. PICKS
+			#print('| PICKS RESULT:')
+			#print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
+			#print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
+			picks_results = [team1_picks/5,team2_picks/5,victory]
 
-		# 7. Saving the result
-		result_file = open('results.csv','a')
-		result_file.write(str(bans_results[0])+';'+str(bans_results[1])\
-							+';'+str(picks_results[0])+';'+str(picks_results[1])+';'+str(victory)+'\n')
-		result_file.close()
+			# 7. Saving the result
+			result_file = open('results.csv','a')
+			result_file.write(str(bans_results[0])+';'+str(bans_results[1])\
+								+';'+str(picks_results[0])+';'+str(picks_results[1])+';'+str(victory)+'\n')
+			result_file.close()
