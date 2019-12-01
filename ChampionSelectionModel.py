@@ -1,3 +1,4 @@
+from __future__ import division
 import getstatistics as gstat
 import math
 import matplotlib.pyplot as plt
@@ -39,7 +40,7 @@ class ChampionSelectionModel:
 		# 1. Initializing the graph
 		self.graph = nx.Graph()
 		for cs in self.champions_stats:
-			self.graph.add_node(cs.name, reward = 5.0/float(cs.tier))
+			self.graph.add_node(cs.name, reward= (5.0/float(cs.tier)), visits= 0)
 
 		# 2. Connecting the nodes
 		for cs in self.champions_stats:
@@ -82,25 +83,27 @@ class ChampionSelectionModel:
 			return([None,0])
 
 		# 1. Initializing the variables
-		champ, reward = '', np.zeros(max_it)
+		champ, values = '', np.zeros(max_it)
 		cur_node = start_node
 		champ = cur_node
 		alt = 1 if pick else -1
 		
 		# 2. Starting the Random Walk
 		for it in range(max_it):
-			# a. initializing the reward
+			# a. initializing the values
 			if cur_node in pref_champ:
-				reward[it] += self.graph.nodes[cur_node]['reward']	
+				values[it] += self.graph.nodes[cur_node]['reward']	
 			elif cur_node in counters:
-				reward[it] -= self.graph.nodes[cur_node]['reward']
+				values[it] -= self.graph.nodes[cur_node]['reward']
 			elif cur_node in self.stats:
-				reward[it] += self.stats[cur_node]*self.graph.nodes[cur_node]['reward']		
+				values[it] += self.stats[cur_node]*self.graph.nodes[cur_node]['reward']		
 			else:
-				reward[it] += alt*self.graph.nodes[cur_node]['reward']	
+				values[it] += alt*self.graph.nodes[cur_node]['reward']	
 
 			# b. walking
 			for i in range(walk_len):
+				self.graph.nodes[cur_node]['visits'] += 1
+
 				# taking the correct edges to walk
 				if pick:
 					transitions = self.graph.edges(cur_node)
@@ -121,20 +124,27 @@ class ChampionSelectionModel:
 				for j in range(len(transitions)):
 					cum += P[j]
 					if cum > p:
+						old_node = cur_node
 						cur_node = transitions[j][0][1]
 
 						if cur_node in counters:
-							reward[it] -= alt*P[j]*self.graph.nodes[cur_node]['reward']	
+							values[it] -= alt*(P[j]*self.graph.nodes[cur_node]['reward']\
+											+ math.sqrt(2*(math.log(self.graph.nodes[cur_node]['visits']+1)\
+												/self.graph.nodes[old_node]['visits'])))
 						elif cur_node in pref_champ:
-							reward[it] += alt*P[j]*self.graph.nodes[cur_node]['reward']	
+							values[it] += alt*(P[j]*self.graph.nodes[cur_node]['reward']\
+											+ math.sqrt(2*(math.log(self.graph.nodes[cur_node]['visits']+1)\
+												/self.graph.nodes[old_node]['visits'])))
 						elif cur_node in self.stats:
-							reward[it] += alt*self.stats[cur_node]*self.graph.nodes[cur_node]['reward']	
+							values[it] += alt*(self.stats[cur_node]*self.graph.nodes[cur_node]['reward']\
+											+ math.sqrt(2*(math.log(self.graph.nodes[cur_node]['visits']+1)\
+												/self.graph.nodes[old_node]['visits'])))
 						break
 
 			cur_node = champ
 
-		# 3. Returning the mean reward from walk
-		return([champ,np.mean(reward)])
+		# 3. Returning the mean values from walk
+		return([champ,np.mean(values)])
 
 	def update_single_ban(self,b):
 		if b in self.graph.nodes:
@@ -282,18 +292,19 @@ class ChampionSelectionModel:
 		vcc= np.array(vcc)
 		return vcc
 
-	def show_local_cluster(self):
+	def plot_local_cluster(self):
 		vcc = self.get_local_cluster()
 		C_l = pd.DataFrame({'Local Cluster Coefficient': vcc})
 		C_l.index = self.graph.nodes()
-		C_l.plot.hist()
+		C_l.plot.hist(bins=10, alpha=0.8)
 		plt.show()
 
 	def get_global_cluster(self):
 		CC = (nx.transitivity(self.graph)) 
 		return CC
 
-	def show_graph(self,custom=True):
+	def plot_graph(self,savename,custom=True):
+		fig = plt.figure(1, figsize=(6, 3.4))
 		# 1. Plotting the graph
 		# a. if you want to plot the standard network, use the bellow line
 		if not custom:
@@ -301,18 +312,30 @@ class ChampionSelectionModel:
 
 		# b. else use the custom one
 		else:
-			pos = nx.spring_layout(self.graph)
-			nx.draw_networkx_nodes(self.graph, pos, node_color='r',node_size=700)
+			pos = nx.spring_layout(self.graph,k=50/math.sqrt(self.graph.order()))
+			nx.draw_networkx_nodes(self.graph, pos, node_color=range(len(self.graph.nodes)),\
+									cmp=plt.cm.Blues, node_size=500)
 
 			ecounter = [(u, v) for (u, v, d) in self.graph.edges(data=True) if d['weight'] <= 0]
-			estrong = [(u, v) for (u, v, d) in self.graph.edges(data=True) if d['weight'] > 0]
-			nx.draw_networkx_edges(self.graph, pos, edge_color='g', edgelist=ecounter,width=1)
-			nx.draw_networkx_edges(self.graph, pos, edge_color='b', edgelist=estrong,width=1)
+			ecounter_weights = [d['weight'] for (u, v, d) in self.graph.edges(data=True) if d['weight'] <= 0]
 
-			nx.draw_networkx_labels(self.graph, pos, font_size=14, font_family='sans-serif')
+			estrong = [(u, v) for (u, v, d) in self.graph.edges(data=True) if d['weight'] > 0]
+			estrong_weights = [d['weight'] for (u, v, d) in self.graph.edges(data=True) if d['weight'] > 0]
+			
+			nx.draw_networkx_edges(self.graph, pos, edge_color=ecounter_weights,\
+									 edgelist=ecounter,width=2,edge_cmap=plt.cm.Reds)
+			nx.draw_networkx_edges(self.graph, pos, edge_color=estrong_weights,\
+									 edgelist=estrong,width=2,edge_cmap=plt.cm.Greens)
+
+			mdf_labels = {}
+			for node in self.graph.nodes:
+				mdf_labels[node] = node[0]
+
+			nx.draw_networkx_labels(self.graph, pos, labels = mdf_labels, font_size=14, font_family='sans-serif')
 
 			plt.axis('off')
-			plt.show()
+			plt.savefig('./imgs/'+savename, bbox_inches='tight')
+			plt.close(fig)
 
 		return None
 
@@ -332,12 +355,35 @@ class ChampionSelectionModel:
 
 		return kvalues,Pk
 
-	def show_nodes_degree(self):
+	def plot_nodes_degree(self,savename):
+		fig = plt.figure(1, figsize=(6, 3.4))
 		kv, P_k = self.degree_distribution(self.graph)
-		plt.bar(kv,P_k)
-		plt.xlabel("k", fontsize=20)
+		plt.bar(kv,P_k, width=0.80, color='b')
+		plt.xlabel("Degree (k)", fontsize=20)
 		plt.ylabel("P(k)", fontsize=20)
 		plt.title("Degree distribution", fontsize=20)
-		#plt.grid(True)
-		plt.show(True)
+
+		plt.savefig('./imgs/'+savename, bbox_inches='tight')
+		plt.close(fig)
+		return None
+
+	def plot_nodes_visits(self, savename):
+		fig = plt.figure(1, figsize=(6, 3.4))
+		visits = [[champ,self.graph.nodes[champ]['visits']] for champ in self.graph.nodes]
+		sum_visits = sum([node[1] for node in visits])
+
+		visits = [[node[0],node[1]/sum_visits] for node in visits]
+		visits = [node for node in visits if node[1] > 0.01]
+		ticks = [node[0] for node in visits]
+		visits = [node[1] for node in visits]
+		pos = range(len(visits))
+
+		plt.barh(pos,visits, align='center', color='b')
+		plt.yticks(pos, ticks)
+
+		plt.xlabel("Visit Percentage (%)", fontsize=20)
+		plt.title("Visit distribution", fontsize=20)
+
+		plt.savefig('./imgs/'+savename, bbox_inches='tight')
+		plt.close(fig)
 		return None

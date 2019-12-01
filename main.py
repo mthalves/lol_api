@@ -1,6 +1,8 @@
 import csv
 import pickle
 
+import matplotlib.pyplot as plt
+
 from ChampionSelectionModel import ChampionSelectionModel
 from ChampionStat import *
 from getGameMates import user
@@ -96,12 +98,12 @@ with open('data/match-list.csv','r') as csv_file:
 				gamemates,champions_stats,N_CHAMPIONS)
 			model.start()
 
-			#model.show_graph()
-			#model.show_nodes_degree()
+			#model.plot_graph('network.pdf')
+			#model.plot_nodes_degree('degree.pdf')
 			#print('Shanon Entropy:',model.get_entropy())
-			#model.show_local_cluster()
+			#model.plot_local_cluster('local_cluster.pdf')
 			#print('Transitivity (Global Cluster):',model.get_global_cluster())
-
+			
 			#####
 			# START OF THE EXPERIMENT
 			#####
@@ -128,10 +130,13 @@ with open('data/match-list.csv','r') as csv_file:
 			# i. predicting the first picks
 			predicted_picks = model.predict_picks(0)
 			#print(predicted_picks)
+			model.plot_nodes_visits('Visit_1.pdf')
 
 			# ii. simulating the picks phase
+			entropy = []
 			team1_counter, team2_counter = 0, 0
 			for pick_round in range(6):
+				entropy.append(model.get_entropy())
 				# picking
 				if pick_round == 0:
 					model.update_pick(picks[team1_counter],k < 5)
@@ -166,6 +171,9 @@ with open('data/match-list.csv','r') as csv_file:
 				# updating the model
 				predicted_picks = model.predict_picks(pick_round+1)
 				#print(predicted_picks)
+				model.plot_nodes_visits('Visit_'+str(pick_round+2)+'.pdf')
+			plt.plot(entropy, '-', linewidth=2, markersize=12)
+			plt.show()
 			####
 			# END OF THE EXPERIMENT
 			####
@@ -198,5 +206,5 @@ with open('data/match-list.csv','r') as csv_file:
 		print('| Good picks (Team 1):',team1_picks/5 ,'- Win?',victory)
 		print('| Good picks (Team 2):',team2_picks/5 ,'- Win?',not victory)
 		picks_results.append([team1_picks/5,team2_picks/5,victory])
-
+		exit(1)
 # 3. Saving the result
