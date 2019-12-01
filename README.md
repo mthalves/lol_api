@@ -1,8 +1,8 @@
 # League of Legends: Recommendation API
 # Personal Context-Aware Recommendation (PCAR) Model
 
-![leaguefront](./league_of_legends.pdf)
-![network](./network.pdf)
+![leaguefront](./league_of_legends.png)
+![network](./network.png)
 
 This repository refers to the final project of USP Introduction to Data Science module (code: SCC0275).
 
