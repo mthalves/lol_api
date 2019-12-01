@@ -7,7 +7,7 @@ from ChampionSelectionModel import ChampionSelectionModel
 from ChampionStat import *
 from getGameMates import user
 
-N_CHAMPIONS = 10
+N_CHAMPIONS = 5
 
 def getBans(match_info):
 	bans = [match_info[i] for i in range(3,13)]
