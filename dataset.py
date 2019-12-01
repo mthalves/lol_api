@@ -199,4 +199,4 @@ def MatchCrawler(initialId, API_KEY, N, M):
 		df.to_csv("data/match-list.csv", mode='a', header=False)
 		dataList = []
 
-MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
+#MatchCrawler(1796379999, API_KEY = "RGAPI-6b1ea488-6b90-467e-a4da-519d5a3aab2d",N = 100, M=10000)
