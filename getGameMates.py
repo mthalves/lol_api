@@ -56,6 +56,5 @@ def main():
 
     print(u.Mastery)
 
-
 if __name__ == "__main__":
     main()

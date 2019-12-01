@@ -10,6 +10,7 @@ import random as rd
 import time
 
 from ChampionStat import *
+from getGameMates import user
 
 GAMEMATENAME = 0
 GAMEMATEROLE = 1
@@ -61,6 +62,12 @@ class ChampionSelectionModel:
 				self.graph.nodes[champion]['reward'] += 10*self.stats[champion]
 
 		# 4. Updating the base graph using the champion masterie
+		self.mastery = user(self.summoner)
+		self.mastery = self.mastery.Mastery
+		max_mastery = max([self.mastery[c] for c in self.mastery])
+		for champion in self.mastery:
+			if champion in self.graph.nodes:
+				self.graph.nodes[champion]['reward'] += 5*(self.mastery[champion]/max_mastery)
 
 		# 5. Updating the base graph using the gamemates statistics
 		for gamemate in self.mates:
