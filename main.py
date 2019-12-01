@@ -8,7 +8,7 @@ from ChampionStat import *
 from getGameMates import user
 
 N_CHAMPIONS = 5
-SKIP_4TEST = 1
+SKIP_4TEST = 150
 
 def getBans(match_info):
 	bans = [match_info[i] for i in range(3,13)]
