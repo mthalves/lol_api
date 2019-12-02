@@ -28,9 +28,9 @@ class user:
 
         # MatchList Information -> (TO DO) get just what you want
         # Getting just the games in Summoner's Rift
-        response = self.request.getMatchList(self.summoner['accountId'])
-        self.MatchList = pd.DataFrame(response['matches'])
-        self.MatchList = self.MatchList.loc[self.MatchList['queue'] == 420]
+        #response = self.request.getMatchList(self.summoner['accountId'])
+        #self.MatchList = pd.DataFrame(response['matches'])
+        #self.MatchList = self.MatchList.loc[self.MatchList['queue'] == 420]
 
         # Getting just the right lanes and roles combinations
 
@@ -41,11 +41,11 @@ class user:
 
         # All the other combinations are not right for us
 
-        self.MatchList = self.MatchList.loc[((self.MatchList['role'] == 'NONE') & (self.MatchList['lane'] == 'JUNGLE'))
-                                            | ((self.MatchList['lane'] == 'MID') & (self.MatchList['role'] == 'SOLO'))
-                                            | ((self.MatchList['lane'] == 'TOP') & (self.MatchList['role'] == 'SOLO'))
-                                            | ((self.MatchList['lane'] == 'BOTTOM') & (self.MatchList['role'] == 'DUO_SUPPORT'))
-                                            | ((self.MatchList['lane'] == 'BOTTOM') & (self.MatchList['role'] == 'DUO_CARRY'))]
+        #self.MatchList = self.MatchList.loc[((self.MatchList['role'] == 'NONE') & (self.MatchList['lane'] == 'JUNGLE'))
+        #                                    | ((self.MatchList['lane'] == 'MID') & (self.MatchList['role'] == 'SOLO'))
+        #                                    | ((self.MatchList['lane'] == 'TOP') & (self.MatchList['role'] == 'SOLO'))
+        #                                    | ((self.MatchList['lane'] == 'BOTTOM') & (self.MatchList['role'] == 'DUO_SUPPORT'))
+        #                                    | ((self.MatchList['lane'] == 'BOTTOM') & (self.MatchList['role'] == 'DUO_CARRY'))]
 
         # Mastery Information -> (TO DO) get just what you want
         response = self.request.getMastery(self.summoner['id'])
