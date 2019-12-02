@@ -66,6 +66,9 @@ class ChampionSelectionModel:
 
 		# 4. Updating the base graph using the champion masterie
 		self.mastery = user(self.summoner)
+		if self.mastery.summoner is None:
+			return False
+
 		self.mastery = self.mastery.Mastery
 		max_mastery = max([self.mastery[c] for c in self.mastery])
 		for champion in self.mastery:

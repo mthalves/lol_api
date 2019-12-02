@@ -17,6 +17,11 @@ class user:
 
         # user information (online user)
         response = self.request.getUser(SummonerName)
+        if 'status' in response:
+            if response['status']['status_code'] == 404:
+                self.summoner = None
+                return None
+
         self.summoner['id'] = response['id']
         self.summoner['accountId'] = response['accountId']
         self.summoner['name'] = SummonerName
