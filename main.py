@@ -7,7 +7,7 @@ from ChampionSelectionModel import ChampionSelectionModel
 from ChampionStat import *
 from getGameMates import user
 
-N_CHAMPIONS = 5
+N_CHAMPIONS = 10
 SKIP_4TEST = 0
 
 def getBans(match_info):
